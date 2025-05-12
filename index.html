@@ -2,21 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=0.5"/>
   <title>Outlaw Shrooms $OAC Whitelist</title>
   <style>
-    /* ... il tuo CSS ... */
+    body {
+      margin:0; padding:0;
+      background: url('assets/oac-logo.png') center/cover no-repeat;
+      background-color:#111; color:#f5f5f5;
+      font-family:Arial,sans-serif; text-align:center;
+      padding:2rem; min-height:100vh;
+      position: relative; /* Required for footer positioning */
+    }
+    .container {
+      background:rgba(0,0,0,0.75); padding:20px;
+      max-width:500px; margin:80px auto; border-radius:20px;
+    }
+    .btn {
+      padding:10px 20px; margin:10px; font-size:16px;
+      border:none; border-radius:10px; cursor:pointer;
+      background-color:#ff6600; color:white;
+    }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .icon-link {
+      display: block;
+      margin: 10px auto;
+      width: 80px;
+      height: auto;
+    }
+    .icon {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    footer {
+      position:fixed; bottom:10px; right: 10px; /* Stick to bottom right */
+      opacity:0.5;
+    }
+    footer img { height:40px; }
+    p#wallet-address { margin:1rem 0; font-size:1rem; }
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="assets/shroom.png" alt="Outlaw Shrooms" class="icon"/>
+    <a href="https://salvor.io/collections/0xcb14e58696aae6e7a2ab45dab8129ab6f8dcce00" class="icon-link">
+      <img src="assets/shroom.png" alt="Outlaw Shrooms" class="icon"/>
+    </a>
     <h1>Outlaw Shrooms Whitelist</h1>
     <p id="wallet-address">Wallet not connected</p>
     <button id="connectBtn" class="btn">Connect Wallet</button>
     <button id="joinBtn" class="btn" disabled>Join Whitelist</button>
   </div>
-  <footer><img src="assets/arena-logo.png" alt="The Arena Logo"/></footer>
+  <footer>
+    <a href="https://starsarena.com/?ref=OutlawShrooms" target="_blank">
+      <img src="assets/arena-logo.png" alt="The Arena Logo"/>
+    </a>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -24,7 +64,7 @@
   <script src="https://unpkg.com/web3modal@1.9.5/dist/index.js"></script>
 
   <script type="module">
-    import { supabase } from './supabase.js'; // Importa l'istanza di supabase dal tuo file
+    import { supabase } from './supabase.js';
 
     const CONTRACT_ADDRESS   = "0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00";
     const ERC721_ABI         = ["function balanceOf(address owner) view returns (uint256)"];
@@ -63,33 +103,46 @@
 
         const nftContract = new ethers.Contract(CONTRACT_ADDRESS, ERC721_ABI, provider);
         const balance     = (await nftContract.balanceOf(userAddress)).toNumber();
+
         if (balance > 0) {
           joinBtn.disabled = false;
+          const { error } = await supabase
+            .from("whitelist")
+            .update({ nft_balance: balance })
+            .eq("wallet", userAddress);
+
+          if (error) {
+            console.error("Error updating NFT balance:", error);
+            alert("Error updating NFT balance.");
+          } else {
+            console.log("NFT balance updated on Supabase.");
+          }
+
         } else {
-          alert("Non possiedi Outlaw Shrooms NFT. Accesso negato.");
+          alert("You do not own Outlaw Shrooms NFT. Access denied.");
         }
       } catch (err) {
         console.error("Wallet connection error", err);
-        alert("Errore connessione wallet: " + err.message);
+        alert("Wallet connection error: " + err.message);
       }
     });
 
     // 3) Join whitelist
     joinBtn.addEventListener("click", async () => {
       try {
-        const { error } = await supabase // Usa l'istanza importata
+        const { error } = await supabase
           .from("whitelist")
           .insert([{ wallet: userAddress }], { returning: "minimal" });
         if (error) {
           alert(error.code === "23505"
-            ? "⚠️ Sei già in whitelist."
-            : "❌ Errore registrazione: " + error.message);
+            ? "⚠️ You are already on the whitelist."
+            : "❌ Registration error: " + error.message);
         } else {
-          alert("✅ Registrazione completata!");
+          alert("✅ Registration completed!");
         }
       } catch (err) {
         console.error("Join error", err);
-        alert("Errore imprevisto: " + err.message);
+        alert("Unexpected error: " + err.message);
       }
     });
   </script>
