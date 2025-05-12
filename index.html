@@ -1,12 +1,12 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Outlaw Shrooms $OAC Whitelist</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       background: url('assets/oac-logo.png') center/cover no-repeat;
       background-color: #111;
       color: #f5f5f5;
@@ -16,10 +16,10 @@
       min-height: 100vh;
     }
     .container {
-      background-color: rgba(0, 0, 0, 0.75);
+      background: rgba(0,0,0,0.75);
       padding: 20px;
-      max-width: 500px;
       margin: 80px auto;
+      max-width: 500px;
       border-radius: 20px;
     }
     .btn {
@@ -32,50 +32,42 @@
       background-color: #ff6600;
       color: white;
     }
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    img.icon {
-      width: 80px;
-      margin: 10px;
-    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    img.icon { width: 80px; margin: 10px auto; display: block; }
     footer {
-      position: fixed;
-      bottom: 10px;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      opacity: 0.5;
+      position: fixed; bottom: 10px; width: 100%;
+      display: flex; justify-content: center; opacity: 0.5;
     }
-    footer img {
-      height: 40px;
-    }
+    footer img { height: 40px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="assets/shroom.png" alt="Fungo" class="icon" />
+    <img src="assets/shroom.png" alt="Fungo" class="icon"/>
     <h1>Outlaw Shrooms Whitelist</h1>
     <p id="wallet-address">Wallet not connected</p>
     <button id="connectBtn" class="btn">Connect Wallet</button>
     <button id="joinBtn" class="btn" disabled>Join Whitelist</button>
-  </div>  <footer>
-    <img src="assets/arena-logo.png" alt="The Arena Logo" />
-  </footer>  <!-- UMD bundles -->  <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>  <script>
-    // Initialize Supabase with public anon key
+  </div>
+  <footer><img src="assets/arena-logo.png" alt="The Arena Logo"/></footer>
+
+  <!-- UMD bundles -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase-js.js"></script>
+  <script>
+    // 1) Inizializza Supabase CORRETTAMENTE
     const supabase = window.supabase.createClient(
       "https://ihxrhfulstiamdsmkdsg.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeHJoZnVsc3RpYW1kc21rZHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTA4NDQsImV4cCI6MjA2MjU4Njg0NH0.ZJ3HiumIWinQ45iD6dPfL9ARi-V5aE6CMau-Aicl5jc"
     );
 
     const CONTRACT_ADDRESS = "0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00";
-    const ERC721_ABI = ["function balanceOf(address owner) view returns (uint256)"];
+    const ERC721_ABI      = ["function balanceOf(address owner) view returns (uint256)"];
     const AVALANCHE_CHAIN_ID = "0xA86A"; // 43114
 
     const connectBtn = document.getElementById("connectBtn");
-    const joinBtn = document.getElementById("joinBtn");
-    const walletAddress = document.getElementById("wallet-address");
+    const joinBtn    = document.getElementById("joinBtn");
+    const walletAddr = document.getElementById("wallet-address");
     let userAddress;
 
     async function switchToAvalanche() {
@@ -84,59 +76,56 @@
           method: "wallet_switchEthereumChain",
           params: [{ chainId: AVALANCHE_CHAIN_ID }]
         });
-      } catch (err) {
-        console.error("Chain switch error", err);
-      }
+      } catch(e) { console.error("Chain switch error", e); }
     }
 
     connectBtn.addEventListener("click", async () => {
+      if (!window.ethereum) {
+        return alert("Installa MetaMask o Trust Wallet prima.");
+      }
       try {
-        if (!window.ethereum) {
-          alert("Please install MetaMask or Trust Wallet.");
-          return;
-        }
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         userAddress = accounts[0];
-        walletAddress.innerText = `Connected: ${userAddress}`;
-
-        const chainId = await window.ethereum.request({ method: "eth_chainId" });
-        if (chainId !== AVALANCHE_CHAIN_ID) {
+        walletAddr.innerText = `Connected: ${userAddress}`;
+        const chain = await window.ethereum.request({ method: "eth_chainId" });
+        if (chain !== AVALANCHE_CHAIN_ID) {
           await switchToAvalanche();
         }
-
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const nftContract = new ethers.Contract(CONTRACT_ADDRESS, ERC721_ABI, provider);
-        const balanceBN = await nftContract.balanceOf(userAddress);
-        const balance = balanceBN.toNumber();
-        if (balance > 0) {
+        const balBN = await nftContract.balanceOf(userAddress);
+        if (balBN.toNumber() > 0) {
           joinBtn.disabled = false;
         } else {
-          alert("No Outlaw Shrooms NFTs found. Access denied.");
+          alert("Non possiedi Outlaw Shrooms NFT → accesso negato.");
         }
-      } catch (err) {
-        console.error("Connection error", err);
-        alert("Error connecting wallet or checking NFTs.");
+      } catch(err) {
+        console.error("Connessione wallet fallita", err);
+        alert("Errore nella connessione o nel check NFT.");
       }
     });
 
     joinBtn.addEventListener("click", async () => {
       try {
-        const { data, error } = await supabase
+        joinBtn.disabled = true;
+        const { error } = await supabase
           .from("whitelist")
-          .insert([{ wallet: userAddress }]);
+          .insert([{ wallet: userAddress }], { returning: "minimal" });
         if (error) {
           if (error.code === "23505") {
-            alert("⚠️ Already whitelisted.");
+            alert("⚠️ Già in whitelist.");
           } else {
-            alert("❌ Registration error: " + error.message);
+            alert("❌ Errore registrazione: " + error.message);
           }
+          joinBtn.disabled = false;
         } else {
-          alert("✅ Successfully whitelisted!");
+          alert("✅ Registrato con successo!");
         }
-      } catch (err) {
-        console.error("Join handler error", err);
-        alert("Unexpected error: " + err.message);
+      } catch(err) {
+        console.error("Errore join", err);
+        alert("Errore imprevisto: " + err.message);
       }
     });
-  </script></body>
+  </script>
+</body>
 </html>
