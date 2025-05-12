@@ -1,95 +1,128 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Outlaw Shrooms $OAC Whitelist</title>
   <style>
-    body { margin:0; padding:0; background:url('assets/oac-logo.png') center/cover no-repeat; background-color:#111; color:#f5f5f5; font-family:Arial,sans-serif; text-align:center; padding:2rem; min-height:100vh; }
-    .container { background:rgba(0,0,0,0.75); padding:20px; max-width:500px; margin:80px auto; border-radius:20px; }
-    .btn { padding:10px 20px; margin:10px; font-size:16px; border:none; border-radius:10px; cursor:pointer; background-color:#ff6600; color:white; }
-    .btn:disabled { opacity:0.5; cursor:not-allowed; }
-    img.icon { width:80px; margin:10px auto; display:block; }
-    footer { position:fixed; bottom:10px; width:100%; display:flex; justify-content:center; opacity:0.5; }
-    footer img { height:40px; }
-    p.info { margin-top:1rem; font-size:1rem; }
+    body {
+      margin: 0; padding: 0;
+      background: url('assets/oac-logo.png') center/cover no-repeat;
+      background-color: #111; color: #f5f5f5;
+      font-family: Arial, sans-serif; text-align: center;
+      padding: 2rem; min-height: 100vh;
+    }
+    .container {
+      background: rgba(0,0,0,0.75); padding: 20px;
+      max-width: 500px; margin: 80px auto; border-radius: 20px;
+    }
+    .btn {
+      padding: 10px 20px; margin: 10px; font-size: 16px;
+      border: none; border-radius: 10px; cursor: pointer;
+      background-color: #ff6600; color: white;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    img.icon { width: 80px; margin: 10px auto; display: block; }
+    footer {
+      position: fixed; bottom: 10px; width: 100%;
+      display: flex; justify-content: center; opacity: 0.5;
+    }
+    footer img { height: 40px; }
+    p#wallet-address { margin: 1rem 0; font-size: 1rem; }
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="assets/shroom.png" alt="Fungo" class="icon" />
+    <img src="assets/shroom.png" alt="Fungo" class="icon"/>
     <h1>Outlaw Shrooms Whitelist</h1>
     <p id="wallet-address">Wallet not connected</p>
     <button id="connectBtn" class="btn">Connect Wallet</button>
     <button id="joinBtn" class="btn" disabled>Join Whitelist</button>
   </div>
-  <footer><img src="assets/arena-logo.png" alt="The Arena Logo" /></footer>  <!-- Load ethers and web3modal -->  <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>  <script src="https://unpkg.com/web3modal@1.9.5/dist/index.js"></script>  <!-- Use ESM import for Supabase to avoid UMD issues -->  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <footer><img src="assets/arena-logo.png" alt="The Arena Logo"/></footer>
 
-    // Initialize Supabase
-    const supabase = createClient(
-      'https://ihxrhfulstiamdsmkdsg.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhZmFzZSIsInJlZiI6ImloeHJoZnVsc3RpYW1kc21rZHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTA4NDQsImV4cCI6MjA2MjU4Njg0NH0.ZJ3HiumIWinQ45iD6dPfL9ARi-V5aE6CMau-Aicl5jc'
+  <!-- UMD bundles -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.5/dist/index.js"></script>
+
+  <script>
+    // Initialize Supabase (UMD exposes window.supabase)
+    const supabase = window.supabase.createClient(
+      "https://ihxrhfulstiamdsmkdsg.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhZmFzZSIsInJlZiI6ImloeHJoZnVsc3RpYW1kc21rZHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTA4NDQsImV4cCI6MjA2MjU4Njg0NH0.ZJ3HiumIWinQ45iD6dPfL9ARi-V5aE6CMau-Aicl5jc"
     );
 
-    const CONTRACT_ADDRESS = '0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00';
-    const ERC721_ABI = ['function balanceOf(address owner) view returns (uint256)'];
-    const AVALANCHE_CHAIN_ID = '0xA86A'; // 43114
+    const CONTRACT_ADDRESS   = "0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00";
+    const ERC721_ABI         = ["function balanceOf(address owner) view returns (uint256)"];
+    const AVALANCHE_CHAIN_ID = "0xA86A"; // 43114
 
-    const connectBtn = document.getElementById('connectBtn');
-    const joinBtn    = document.getElementById('joinBtn');
-    const walletAddr = document.getElementById('wallet-address');
+    const connectBtn    = document.getElementById("connectBtn");
+    const joinBtn       = document.getElementById("joinBtn");
+    const walletAddrEl  = document.getElementById("wallet-address");
     let provider, signer, userAddress;
 
-    // Setup Web3Modal
+    // Web3Modal setup
     const providerOptions = {
       walletconnect: {
         package: window.WalletConnectProvider.default,
-        options: { rpc: { 43114: 'https://api.avax.network/ext/bc/C/rpc' } }
+        options: { rpc: { 43114: "https://api.avax.network/ext/bc/C/rpc" } }
       }
     };
     const web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
 
-    connectBtn.addEventListener('click', async () => {
+    // Connect wallet & check NFT
+    connectBtn.addEventListener("click", async () => {
       try {
         const instance = await web3Modal.connect();
         provider = new ethers.providers.Web3Provider(instance);
-        signer = provider.getSigner();
+        signer   = provider.getSigner();
         userAddress = await signer.getAddress();
-        walletAddr.innerText = `Connected: ${userAddress}`;
+        walletAddrEl.textContent = `Connected: ${userAddress}`;
 
-        const network = await provider.getNetwork();
-        if (network.chainId !== 43114) {
-          await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: AVALANCHE_CHAIN_ID }] });
+        const { chainId } = await provider.getNetwork();
+        if (chainId !== 43114) {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: AVALANCHE_CHAIN_ID }]
+          });
         }
 
         const nftContract = new ethers.Contract(CONTRACT_ADDRESS, ERC721_ABI, provider);
-        const balance = (await nftContract.balanceOf(userAddress)).toNumber();
+        const balance     = (await nftContract.balanceOf(userAddress)).toNumber();
         if (balance > 0) {
           joinBtn.disabled = false;
         } else {
-          alert('Non possiedi Outlaw Shrooms NFT. Accesso negato.');
+          alert("Non possiedi Outlaw Shrooms NFT. Accesso negato.");
         }
       } catch (err) {
-        console.error('Wallet connection error', err);
-        alert('Errore connessione wallet: ' + err.message);
+        console.error("Wallet connection error", err);
+        alert("Errore connessione wallet: " + err.message);
       }
     });
 
-    joinBtn.addEventListener('click', async () => {
+    // Join whitelist
+    joinBtn.addEventListener("click", async () => {
       try {
         joinBtn.disabled = true;
-        const { error } = await supabase.from('whitelist').insert([{ wallet: userAddress }], { returning: 'minimal' });
+        const { error } = await supabase
+          .from("whitelist")
+          .insert([{ wallet: userAddress }], { returning: "minimal" });
         if (error) {
-          if (error.code === '23505') alert('⚠️ Già whitelistato.');
-          else alert('❌ Errore registrazione: ' + error.message);
+          alert(error.code === "23505"
+            ? "⚠️ Già in whitelist."
+            : "❌ Errore registrazione: " + error.message);
           joinBtn.disabled = false;
         } else {
-          alert('✅ Registrazione completata!');
+          alert("✅ Registrazione completata!");
         }
       } catch (err) {
-        console.error('Join error', err);
-        alert('Errore imprevisto: ' + err.message);
+        console.error("Join error", err);
+        alert("Errore imprevisto: " + err.message);
+        joinBtn.disabled = false;
       }
     });
-  </script></body>
+  </script>
+</body>
 </html>
