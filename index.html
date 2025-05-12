@@ -84,20 +84,22 @@
         try {
           joinBtn.disabled = true;
           infoMsg.textContent = 'Registering...';
-          const { error } = await supabase.from('whitelist').insert([{ wallet: userAddress }]);
+          const { data, error } = await supabase.from('whitelist').insert([{ wallet: userAddress }]).select();
           if (error) {
+            console.error('Supabase error', error);
             if (error.code === '23505') {
               infoMsg.textContent = '⚠️ Already whitelisted.';
             } else {
-              console.error('Supabase error', error);
-              infoMsg.textContent = '❌ Registration failed.';
+              infoMsg.textContent = `❌ Registration failed: ${error.message}`;
             }
           } else {
+            console.log('Supabase data', data);
             infoMsg.textContent = '✅ Whitelisted successfully!';
           }
         } catch (error) {
-          console.error('Join error', error);
-          infoMsg.textContent = '❌ Unexpected error.';
+          console.error('Join unexpected error', error);
+          infoMsg.textContent = `❌ Unexpected error: ${error.message}`;
+          joinBtn.disabled = false;
         }
       });
     });
