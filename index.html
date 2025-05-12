@@ -22,19 +22,22 @@
     <button id="connectBtn" class="btn">Connect Wallet</button>
     <button id="joinBtn" class="btn" disabled>Join Whitelist</button>
   </div>
-  <footer><img src="assets/arena-logo.png" alt="The Arena Logo" /></footer>  <!-- UMD bundles -->  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-js.js"></script>  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>  <script src="https://unpkg.com/web3modal@1.9.5/dist/index.js"></script>  <script>
-    // Supabase client
-    const supabase = window.supabase.createClient(
-      "https://ihxrhfulstiamdsmkdsg.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh...");
+  <footer><img src="assets/arena-logo.png" alt="The Arena Logo" /></footer>  <!-- Load ethers and web3modal -->  <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>  <script src="https://unpkg.com/web3modal@1.9.5/dist/index.js"></script>  <!-- Use ESM import for Supabase to avoid UMD issues -->  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const CONTRACT_ADDRESS = "0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00";
-    const ERC721_ABI = ["function balanceOf(address owner) view returns (uint256)"];
-    const AVALANCHE_CHAIN_ID = "0xA86A";
+    // Initialize Supabase
+    const supabase = createClient(
+      'https://ihxrhfulstiamdsmkdsg.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhZmFzZSIsInJlZiI6ImloeHJoZnVsc3RpYW1kc21rZHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTA4NDQsImV4cCI6MjA2MjU4Njg0NH0.ZJ3HiumIWinQ45iD6dPfL9ARi-V5aE6CMau-Aicl5jc'
+    );
 
-    const connectBtn = document.getElementById("connectBtn");
-    const joinBtn = document.getElementById("joinBtn");
-    const walletAddr = document.getElementById("wallet-address");
+    const CONTRACT_ADDRESS = '0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00';
+    const ERC721_ABI = ['function balanceOf(address owner) view returns (uint256)'];
+    const AVALANCHE_CHAIN_ID = '0xA86A'; // 43114
+
+    const connectBtn = document.getElementById('connectBtn');
+    const joinBtn    = document.getElementById('joinBtn');
+    const walletAddr = document.getElementById('wallet-address');
     let provider, signer, userAddress;
 
     // Setup Web3Modal
@@ -46,7 +49,7 @@
     };
     const web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
 
-    connectBtn.addEventListener("click", async () => {
+    connectBtn.addEventListener('click', async () => {
       try {
         const instance = await web3Modal.connect();
         provider = new ethers.providers.Web3Provider(instance);
@@ -54,9 +57,9 @@
         userAddress = await signer.getAddress();
         walletAddr.innerText = `Connected: ${userAddress}`;
 
-        const chainId = await provider.getNetwork().then(n => n.chainId);
-        if (chainId !== 43114) {
-          await window.ethereum.request({ method: 'wallet_switchEthereumChain', params:[{ chainId: AVALANCHE_CHAIN_ID }] });
+        const network = await provider.getNetwork();
+        if (network.chainId !== 43114) {
+          await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: AVALANCHE_CHAIN_ID }] });
         }
 
         const nftContract = new ethers.Contract(CONTRACT_ADDRESS, ERC721_ABI, provider);
@@ -64,25 +67,27 @@
         if (balance > 0) {
           joinBtn.disabled = false;
         } else {
-          alert("Non possiedi Outlaw Shrooms NFT. Accesso negato.");
+          alert('Non possiedi Outlaw Shrooms NFT. Accesso negato.');
         }
       } catch (err) {
-        console.error(err);
-        alert("Errore connettere wallet: " + err.message);
+        console.error('Wallet connection error', err);
+        alert('Errore connessione wallet: ' + err.message);
       }
     });
 
-    joinBtn.addEventListener("click", async () => {
+    joinBtn.addEventListener('click', async () => {
       try {
+        joinBtn.disabled = true;
         const { error } = await supabase.from('whitelist').insert([{ wallet: userAddress }], { returning: 'minimal' });
         if (error) {
-          if (error.code === '23505') alert('⚠️ Già in whitelist.');
+          if (error.code === '23505') alert('⚠️ Già whitelistato.');
           else alert('❌ Errore registrazione: ' + error.message);
+          joinBtn.disabled = false;
         } else {
-          alert('✅ Registrato con successo!');
+          alert('✅ Registrazione completata!');
         }
       } catch (err) {
-        console.error(err);
+        console.error('Join error', err);
         alert('Errore imprevisto: ' + err.message);
       }
     });
