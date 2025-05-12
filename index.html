@@ -60,7 +60,7 @@
       joinBtn.disabled = true;
       statusMsg.textContent = 'Registering...';
       try {
-        await fetch('https://<TUO-PROGETTO>.vercel.app/api/whitelist', {
+        await fetch('https://outlaw-whitelist-9dlm91ih7-toffs-projects-d1ff6ba9.vercel.app/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address: userAddress })
