@@ -84,20 +84,29 @@
       }
     });
 
-        joinBtn.addEventListener('click', async () => {
+            joinBtn.addEventListener('click', async () => {
       try {
         joinBtn.disabled = true;
         infoMsg.textContent = 'Registering...';
-        const response = await supabase.from('whitelist').insert([{ wallet: userAddress }]);
-        const error = response.error;
+
+        // Attempt insert and log full response for debugging
+        const { data, error } = await supabase
+          .from('whitelist')
+          .insert([{ wallet: userAddress }]);
+        console.log('Supabase response data:', data, 'error:', error);
+
         if (error) {
           console.error('Supabase error', error);
           infoMsg.textContent = error.code === '23505'
             ? '⚠️ Already whitelisted.'
-            : `❌ ${error.message || 'Registration failed.'}`;
+            : `❌ Registration failed: ${error.message || JSON.stringify(error)}`;
           joinBtn.disabled = false;
+        } else if (data && data.length > 0) {
+          infoMsg.textContent = '✅ Whitelisted successfully!';
         } else {
-          infoMsg.textContent = '✅ Whitelisted!';
+          console.warn('Unexpected response from Supabase', data, error);
+          infoMsg.textContent = '❌ Unexpected registration response.';
+          joinBtn.disabled = false;
         }
       } catch (err) {
         console.error('Join error', err);
@@ -105,5 +114,3 @@
         joinBtn.disabled = false;
       }
     });
-  </script></body>
-</html>
