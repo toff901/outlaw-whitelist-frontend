@@ -16,17 +16,19 @@
     .container {
       background:rgba(0,0,0,0.75); padding:20px;
       max-width:500px; margin:80px auto; border-radius:20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .btn {
-      padding:10px 20px; margin:10px; font-size:16px;
-      border:none; border-radius:10px; cursor:pointer;
-      background-color:#ff6600; color:white;
+    .buy-image {
+      width: 120px; /* Adjust size as needed */
+      height: auto;
+      margin-bottom: 10px; /* Space between BUY image and mushroom */
     }
-    .btn:disabled { opacity:0.5; cursor:not-allowed; }
     .icon-link {
       display: block;
       margin: 10px auto;
-      width: 80px;
+      width: 100px; /* Increased mushroom size */
       height: auto;
     }
     .icon {
@@ -34,6 +36,12 @@
       height: auto;
       display: block;
     }
+    .btn {
+      padding:10px 20px; margin:10px; font-size:16px;
+      border:none; border-radius:10px; cursor:pointer;
+      background-color:#ff6600; color:white;
+    }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
     footer {
       position:fixed; bottom:10px; right: 10px; /* Stick to bottom right */
       opacity:0.5;
@@ -44,6 +52,7 @@
 </head>
 <body>
   <div class="container">
+    <img src="assets/buy.png" alt="Buy" class="buy-image"/>
     <a href="https://salvor.io/collections/0xcb14e58696aae6e7a2ab45dab8129ab6f8dcce00" class="icon-link">
       <img src="assets/shroom.png" alt="Outlaw Shrooms" class="icon"/>
     </a>
