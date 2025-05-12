@@ -38,29 +38,29 @@
 </head>
 <body>
   <img src="assets/oac-logo.png" alt="$OAC Logo" class="logo">
-  <h1 class="text-3xl font-bold mb-2">Outlaw Shrooms Whitelist</h1>
-  <p class="info" id="infoMsg">Connect your Avalanche wallet to check your NFTs and join the whitelist.</p>
+  <h1>Outlaw Shrooms Whitelist</h1>
+  <p id="infoMsg" class="info">Connect your Avalanche wallet to check your NFTs and join the whitelist.</p>
 
   <button id="connectBtn" class="btn">Connect Wallet</button>
   <button id="joinBtn" class="btn" disabled>Join Whitelist</button>
 
-  <img src="assets/shroom.png" alt="Outlaw Shrooms" class="logo mt-8">
+  <img src="assets/shroom.png" alt="Outlaw Shrooms" class="logo">
   <img src="assets/arena-logo.png" alt="The Arena Logo" class="corner-logo">
 
   <!-- UMD bundles -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase-client.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
 
   <script>
-    // Supabase client (global supabase)
+    // Initialize Supabase
     const supabase = window.supabase.createClient(
       "https://ihxrhfulstiamdsmkdsg.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeHJoZnVsc3RpYW1kc21rZHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTA4NDQsImV4cCI6MjA2MjU4Njg0NH0.ZJ3HiumIWinQ45iD6dPfL9ARi-V5aE6CMau-Aicl5jc"
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh..."
     );
 
     const CONTRACT_ADDRESS = "0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00";
     const ERC721_ABI = ["function balanceOf(address owner) view returns (uint256)"];
-    const AVALANCHE_CHAIN_ID = "0xA86A"; // hex for 43114
+    const AVALANCHE_CHAIN_ID = "0xA86A";
 
     const connectBtn = document.getElementById("connectBtn");
     const joinBtn    = document.getElementById("joinBtn");
