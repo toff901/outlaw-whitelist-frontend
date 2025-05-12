@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,17 +14,20 @@
     <img src="assets/oac-logo.png" alt="$OAC Logo" class="h-10" />
     <img src="assets/shroom.png" alt="Outlaw Shrooms" class="h-12" />
     <img src="assets/arena-logo.png" alt="The Arena Logo" class="h-8 opacity-50" />
-  </header>
-
-  <div class="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md">
+  </header>  <div class="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md">
     <h1 class="text-2xl font-bold mb-4 text-yellow-400">Whitelist Pre-Sale</h1>
-    <p class="mb-6">Connect your wallet to join the Outlaw Shrooms $OAC whitelist and get exclusive presale access.</p>
+    <p id="infoMsg" class="mb-6">Connect your wallet to join the Outlaw Shrooms $OAC whitelist and get exclusive presale access.</p>
     <button id="connectBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold py-2 rounded-lg mb-4">Connect Wallet</button>
     <button id="joinBtn" class="w-full bg-green-500 hover:bg-green-600 text-gray-900 font-semibold py-2 rounded-lg disabled:opacity-50" disabled>Join Whitelist</button>
     <p id="statusMsg" class="mt-4 text-center"></p>
-  </div>
+  </div>  <script>
+    // Configuration
+    const CONTRACT_ADDRESS = '0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00';
+    const WHITELIST_ENDPOINT = 'https://outlaw-whitelist-git-main-toffs-projects-d1ff6ba9.vercel.app/api/whitelist';
+    const ERC721_ABI = [
+      'function balanceOf(address owner) view returns (uint256)'
+    ];
 
-  <script>
     const providerOptions = {
       walletconnect: {
         package: window.WalletConnectProvider.default,
@@ -34,11 +36,12 @@
     };
 
     const web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
-    let provider, signer, userAddress;
+    let provider, signer, userAddress, nftContract;
 
     const connectBtn = document.getElementById('connectBtn');
     const joinBtn = document.getElementById('joinBtn');
     const statusMsg = document.getElementById('statusMsg');
+    const infoMsg = document.getElementById('infoMsg');
 
     connectBtn.onclick = async () => {
       try {
@@ -47,11 +50,21 @@
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
         connectBtn.textContent = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
-        joinBtn.disabled = false;
+
+        // Initialize NFT contract and check balance
+        nftContract = new ethers.Contract(CONTRACT_ADDRESS, ERC721_ABI, provider);
+        const balance = await nftContract.balanceOf(userAddress);
+        if (balance.toNumber() > 0) {
+          infoMsg.textContent = `You own ${balance} Outlaw Shrooms NFT(s). You can join the whitelist.`;
+          joinBtn.disabled = false;
+        } else {
+          infoMsg.textContent = 'You do not own any Outlaw Shrooms NFT. You are not eligible for the whitelist.';
+          joinBtn.disabled = true;
+        }
         statusMsg.textContent = '';
       } catch (err) {
         console.error(err);
-        statusMsg.textContent = 'Connection failed. Try again.';
+        statusMsg.textContent = 'Connection or contract check failed. Try again.';
       }
     };
 
@@ -60,7 +73,7 @@
       joinBtn.disabled = true;
       statusMsg.textContent = 'Registering...';
       try {
-        await fetch('https://outlaw-whitelist-9dlm91ih7-toffs-projects-d1ff6ba9.vercel.app/', {
+        await fetch(WHITELIST_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address: userAddress })
@@ -72,6 +85,5 @@
         joinBtn.disabled = false;
       }
     };
-  </script>
-</body>
+  </script></body>
 </html>
