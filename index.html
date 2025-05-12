@@ -84,14 +84,17 @@
       }
     });
 
-    joinBtn.addEventListener('click', async () => {
+        joinBtn.addEventListener('click', async () => {
       try {
         joinBtn.disabled = true;
         infoMsg.textContent = 'Registering...';
-        const { data, error } = await supabase.from('whitelist').insert([{ wallet: userAddress }]).select();
+        const response = await supabase.from('whitelist').insert([{ wallet: userAddress }]);
+        const error = response.error;
         if (error) {
           console.error('Supabase error', error);
-          infoMsg.textContent = error.code === '23505' ? '⚠️ Already whitelisted.' : `❌ ${error.message}`;
+          infoMsg.textContent = error.code === '23505'
+            ? '⚠️ Already whitelisted.'
+            : `❌ ${error.message || 'Registration failed.'}`;
           joinBtn.disabled = false;
         } else {
           infoMsg.textContent = '✅ Whitelisted!';
