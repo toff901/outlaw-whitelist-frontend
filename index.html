@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outlaw Shrooms $OAC Whitelist</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3modal@1/dist/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1/dist/umd/index.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+  <!-- Header with logos -->
+  <header class="w-full max-w-md flex items-center justify-between mb-8">
+    <img src="assets/oac-logo.png" alt="$OAC Logo" class="h-10" />
+    <img src="assets/shroom.png" alt="Outlaw Shrooms" class="h-12" />
+    <img src="assets/arena-logo.png" alt="The Arena Logo" class="h-8 opacity-50" />
+  </header>
+
+  <div class="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-4 text-yellow-400">Whitelist Pre-Sale</h1>
+    <p class="mb-6">Connect your wallet to join the Outlaw Shrooms $OAC whitelist and get exclusive presale access.</p>
+    <button id="connectBtn" class="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold py-2 rounded-lg mb-4">Connect Wallet</button>
+    <button id="joinBtn" class="w-full bg-green-500 hover:bg-green-600 text-gray-900 font-semibold py-2 rounded-lg disabled:opacity-50" disabled>Join Whitelist</button>
+    <p id="statusMsg" class="mt-4 text-center"></p>
+  </div>
+
+  <script>
+    const providerOptions = {
+      walletconnect: {
+        package: window.WalletConnectProvider.default,
+        options: { rpc: { 43114: 'https://api.avax.network/ext/bc/C/rpc' } }
+      }
+    };
+
+    const web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
+    let provider, signer, userAddress;
+
+    const connectBtn = document.getElementById('connectBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    connectBtn.onclick = async () => {
+      try {
+        const instance = await web3Modal.connect();
+        provider = new ethers.providers.Web3Provider(instance);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        connectBtn.textContent = `Connected: ${userAddress.substring(0,6)}...${userAddress.slice(-4)}`;
+        joinBtn.disabled = false;
+        statusMsg.textContent = '';
+      } catch (err) {
+        console.error(err);
+        statusMsg.textContent = 'Connection failed. Try again.';
+      }
+    };
+
+    joinBtn.onclick = async () => {
+      if (!userAddress) return;
+      joinBtn.disabled = true;
+      statusMsg.textContent = 'Registering...';
+      try {
+        await fetch('https://<TUO-PROGETTO>.vercel.app/api/whitelist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: userAddress })
+        });
+        statusMsg.textContent = '✅ Wallet registered successfully!';
+      } catch (err) {
+        console.error(err);
+        statusMsg.textContent = '❌ Registration failed. Try again later.';
+        joinBtn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>
