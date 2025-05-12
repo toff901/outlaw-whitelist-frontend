@@ -6,34 +6,34 @@
   <title>Outlaw Shrooms $OAC Whitelist</title>
   <style>
     body {
-      margin: 0; padding: 0;
+      margin:0; padding:0;
       background: url('assets/oac-logo.png') center/cover no-repeat;
-      background-color: #111; color: #f5f5f5;
-      font-family: Arial, sans-serif; text-align: center;
-      padding: 2rem; min-height: 100vh;
+      background-color:#111; color:#f5f5f5;
+      font-family:Arial,sans-serif; text-align:center;
+      padding:2rem; min-height:100vh;
     }
     .container {
-      background: rgba(0,0,0,0.75); padding: 20px;
-      max-width: 500px; margin: 80px auto; border-radius: 20px;
+      background:rgba(0,0,0,0.75); padding:20px;
+      max-width:500px; margin:80px auto; border-radius:20px;
     }
     .btn {
-      padding: 10px 20px; margin: 10px; font-size: 16px;
-      border: none; border-radius: 10px; cursor: pointer;
-      background-color: #ff6600; color: white;
+      padding:10px 20px; margin:10px; font-size:16px;
+      border:none; border-radius:10px; cursor:pointer;
+      background-color:#ff6600; color:white;
     }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    img.icon { width: 80px; margin: 10px auto; display: block; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+    img.icon { width:80px; margin:10px auto; display:block; }
     footer {
-      position: fixed; bottom: 10px; width: 100%;
-      display: flex; justify-content: center; opacity: 0.5;
+      position:fixed; bottom:10px; width:100%;
+      display:flex; justify-content:center; opacity:0.5;
     }
-    footer img { height: 40px; }
-    p#wallet-address { margin: 1rem 0; font-size: 1rem; }
+    footer img { height:40px; }
+    p#wallet-address { margin:1rem 0; font-size:1rem; }
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="assets/shroom.png" alt="Fungo" class="icon"/>
+    <img src="assets/shroom.png" alt="Outlaw Shrooms" class="icon"/>
     <h1>Outlaw Shrooms Whitelist</h1>
     <p id="wallet-address">Wallet not connected</p>
     <button id="connectBtn" class="btn">Connect Wallet</button>
@@ -43,15 +43,15 @@
 
   <!-- UMD bundles -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
   <script src="https://unpkg.com/web3modal@1.9.5/dist/index.js"></script>
 
   <script>
-    // Initialize Supabase (UMD exposes window.supabase)
+    // 1) Inizializza Supabase con URL e CHIAVE ANONIME esatte
     const supabase = window.supabase.createClient(
       "https://ihxrhfulstiamdsmkdsg.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhZmFzZSIsInJlZiI6ImloeHJoZnVsc3RpYW1kc21rZHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTA4NDQsImV4cCI6MjA2MjU4Njg0NH0.ZJ3HiumIWinQ45iD6dPfL9ARi-V5aE6CMau-Aicl5jc"
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeHJoZnVsc3RpYW1kc21rZHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTA4NDQsImV4cCI6MjA2MjU4Njg0NH0.ZJ3HiumIWinQ45iD6dPfL9ARi-V5aE6CMau-Aicl5jc"
     );
 
     const CONTRACT_ADDRESS   = "0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00";
@@ -72,7 +72,7 @@
     };
     const web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
 
-    // Connect wallet & check NFT
+    // 2) Connect wallet & check NFT ownership
     connectBtn.addEventListener("click", async () => {
       try {
         const instance = await web3Modal.connect();
@@ -81,8 +81,8 @@
         userAddress = await signer.getAddress();
         walletAddrEl.textContent = `Connected: ${userAddress}`;
 
-        const { chainId } = await provider.getNetwork();
-        if (chainId !== 43114) {
+        const network = await provider.getNetwork();
+        if (network.chainId !== 43114) {
           await window.ethereum.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: AVALANCHE_CHAIN_ID }]
@@ -102,25 +102,22 @@
       }
     });
 
-    // Join whitelist
+    // 3) Join whitelist
     joinBtn.addEventListener("click", async () => {
       try {
-        joinBtn.disabled = true;
         const { error } = await supabase
           .from("whitelist")
           .insert([{ wallet: userAddress }], { returning: "minimal" });
         if (error) {
           alert(error.code === "23505"
-            ? "⚠️ Già in whitelist."
+            ? "⚠️ Sei già in whitelist."
             : "❌ Errore registrazione: " + error.message);
-          joinBtn.disabled = false;
         } else {
           alert("✅ Registrazione completata!");
         }
       } catch (err) {
         console.error("Join error", err);
         alert("Errore imprevisto: " + err.message);
-        joinBtn.disabled = false;
       }
     });
   </script>
