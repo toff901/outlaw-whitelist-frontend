@@ -139,9 +139,16 @@
     // 3) Join whitelist
     joinBtn.addEventListener("click", async () => {
       try {
+        const nftContract = new ethers.Contract(CONTRACT_ADDRESS, ERC721_ABI, provider);
+        const balance = (await nftContract.balanceOf(userAddress)).toNumber();
+
         const { error } = await supabase
           .from("whitelist")
-          .insert([{ wallet: userAddress }], { returning: "minimal" });
+          .insert([{
+            wallet: userAddress,
+            nft_balance: balance
+          }], { returning: 'minimal' });
+
         if (error) {
           alert(error.code === "23505"
             ? "⚠️ You are already on the whitelist."
