@@ -3,112 +3,137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Outlaw Shrooms Staking</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <title>Outlaw Shrooms $OAC Whitelist</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      background: url('https://yourdomain.com/logo-oac.png') no-repeat center center fixed;
-      background-size: cover;
+      background: url('assets/oac-logo.png') center/cover no-repeat;
+      background-color: #111;
+      color: #f5f5f5;
       font-family: Arial, sans-serif;
-      color: white;
       text-align: center;
+      padding: 2rem;
+      min-height: 100vh;
     }
-
-    .container {
-      background-color: rgba(0, 0, 0, 0.75);
-      padding: 20px;
-      max-width: 500px;
-      margin: 80px auto;
-      border-radius: 20px;
-    }
-
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
+    .logo { max-width: 200px; margin: 1rem auto; display: block; }
+    .btn {
       background-color: #ff6600;
-      color: white;
+      color: #fff;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin: 1rem;
     }
-
-    img.icon {
-      width: 80px;
-      margin: 10px;
-    }
-
-    footer {
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .corner-logo {
       position: fixed;
-      bottom: 10px;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      opacity: 0.5;
+      bottom: 1rem;
+      right: 1rem;
+      max-width: 80px;
+      opacity: 0.6;
     }
-
-    footer img {
-      height: 40px;
-    }
+    .info { margin-top: 1rem; font-size: 1rem; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="https://yourdomain.com/fungo.png" alt="Fungo" class="icon"/>
-    <h1>Outlaw Shrooms Staking</h1>
-    <p>Connect your wallet to join the whitelist and stake your NFTs.</p>
-    <button onclick="connectWallet()">Connect Wallet</button>
-    <p id="wallet-address">Wallet not connected</p>
-    <button onclick="joinWhitelist()">Join Whitelist</button>
-  </div>
+  <img src="assets/oac-logo.png" alt="$OAC Logo" class="logo">
+  <h1>Outlaw Shrooms Whitelist</h1>
+  <p id="infoMsg" class="info">Connect your Avalanche wallet to check your NFTs and join the whitelist.</p>
 
-  <footer>
-    <img src="https://yourdomain.com/logo-arena.png" alt="The Arena"/>
-  </footer>
+  <button id="connectBtn" class="btn">Connect Wallet</button>
+  <button id="joinBtn" class="btn" disabled>Join Whitelist</button>
+
+  <img src="assets/shroom.png" alt="Outlaw Shrooms" class="logo">
+  <img src="assets/arena-logo.png" alt="The Arena Logo" class="corner-logo">
+
+  <!-- UMD bundles -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
 
   <script>
-    const supabase = supabase.createClient(
+    // Initialize Supabase
+    const supabase = window.supabase.createClient(
       "https://ihxrhfulstiamdsmkdsg.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeHJoZnVsc3RpYW1kc21rZHNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwMTA4NDQsImV4cCI6MjA2MjU4Njg0NH0.ZJ3HiumIWinQ45iD6dPfL9ARi-V5aE6CMau-Aicl5jc"
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh..."
     );
 
-    let userAddress = null;
+    const CONTRACT_ADDRESS = "0xcb14e58696aAe6e7a2ab45dab8129ab6f8dcce00";
+    const ERC721_ABI = ["function balanceOf(address owner) view returns (uint256)"];
+    const AVALANCHE_CHAIN_ID = "0xA86A";
 
-    async function connectWallet() {
-      if (typeof window.ethereum === 'undefined') {
-        alert("Install MetaMask or Trust Wallet.");
-        return;
-      }
+    const connectBtn = document.getElementById("connectBtn");
+    const joinBtn    = document.getElementById("joinBtn");
+    const infoMsg    = document.getElementById("infoMsg");
+    let userAddress, provider;
+
+    async function switchToAvalanche() {
       try {
-        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-        userAddress = accounts[0];
-        document.getElementById("wallet-address").innerText = "Connected: " + userAddress;
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: AVALANCHE_CHAIN_ID }]
+        });
       } catch (err) {
-        alert("Wallet connection failed.");
+        console.error("Chain switch error", err);
       }
     }
 
-    async function joinWhitelist() {
-      if (!userAddress) {
-        alert("Connect your wallet first.");
-        return;
-      }
-
-      const { data, error } = await supabase.from("whitelist").insert([{ wallet: userAddress }]);
-
-      if (error) {
-        if (error.code === '23505') {
-          alert("⚠️ Already whitelisted.");
-        } else {
-          alert("❌ Registration error: " + error.message);
+    connectBtn.addEventListener("click", async () => {
+      try {
+        if (!window.ethereum) {
+          alert("Please install MetaMask or Trust Wallet");
+          return;
         }
-      } else {
-        alert("✅ Successfully whitelisted!");
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        userAddress = accounts[0];
+
+        const chainId = await window.ethereum.request({ method: "eth_chainId" });
+        if (chainId !== AVALANCHE_CHAIN_ID) {
+          infoMsg.textContent = "Switching to Avalanche network...";
+          await switchToAvalanche();
+        }
+
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        connectBtn.textContent = `Connected: ${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
+
+        const nftContract = new ethers.Contract(CONTRACT_ADDRESS, ERC721_ABI, provider);
+        const balanceBN   = await nftContract.balanceOf(userAddress);
+        const balance     = balanceBN.toNumber();
+        if (balance > 0) {
+          infoMsg.textContent = `Detected ${balance} Outlaw Shrooms NFT(s). You may join.`;
+          joinBtn.disabled = false;
+        } else {
+          infoMsg.textContent = "You hold no Outlaw Shrooms NFTs. Access denied.";
+          joinBtn.disabled = true;
+        }
+      } catch (err) {
+        console.error("Connection error", err);
+        infoMsg.textContent = "Error during wallet connection or NFT check.";
       }
-    }
+    });
+
+    joinBtn.addEventListener("click", async () => {
+      try {
+        joinBtn.disabled = true;
+        infoMsg.textContent = "Registering you to whitelist...";
+        const { data, error } = await supabase
+          .from("whitelist")
+          .insert([{ wallet: userAddress }]);
+        console.log("Supabase insert:", data, error);
+        if (error) {
+          infoMsg.textContent = error.code === "23505"
+            ? "⚠️ Already whitelisted."
+            : `❌ Registration error: ${error.message}`;
+          joinBtn.disabled = false;
+        } else {
+          infoMsg.textContent = "✅ Successfully whitelisted!";
+        }
+      } catch (err) {
+        console.error("Join handler error", err);
+        infoMsg.textContent = `❌ Unexpected error: ${err.message}`;
+        joinBtn.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>
